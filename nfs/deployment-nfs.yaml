@@ -1,0 +1,33 @@
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: nfs-provisioner
+  namespace: fabric8
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: nfs-provisioner
+    spec:
+      serviceAccount: nfs-client-provisioner  #这个要与刚才创建的serviceaccount 的名字一致
+      containers:
+        - name: nfs-provisioner
+          image: registry.cn-hangzhou.aliyuncs.com/open-ali/nfs-client-provisioner
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /persistentvolumes
+          env:
+            - name: PROVISIONER_NAME
+              value: example.com/nfs #这里名字自定义，要记住storageclass 后面要用到
+            - name: NFS_SERVER
+              value: 192.168.0.226
+            - name: NFS_PATH
+              value: /xfdata 
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            server: 192.168.0.226
+            path: /xfdata

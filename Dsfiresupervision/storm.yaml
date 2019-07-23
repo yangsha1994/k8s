@@ -1,0 +1,115 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: storm-svc
+  labels:
+    app: storm-svc
+spec:
+  ports:
+  - port: 6700
+    name: port1
+    targetPort: 6700
+  - port: 6701
+    name: port2
+    targetPort: 6701
+  - port: 6702
+    name: port3
+    targetPort: 6702
+  - port: 6703
+    name: port4
+    targetPort: 6703
+  - port: 8888
+    name: port5
+    targetPort: 8888
+  - port: 6627
+    name: port6
+    targetPort: 6627
+  selector:
+    app: storm
+  #clusterIP: None
+ 
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: 
+  name: storm
+  namespace: fabric8
+spec:
+  serviceName: storm-svc #这是必须要的字段，需要关联到每一个无头服务上，他基于这个无头服务才能给每一个pod分配一个唯一的，持久的，固定的标识符
+  replicas: 3 
+  selector: 
+    matchLabels:
+      app: storm-pod
+  template:
+    metadata:
+      labels:
+        app: storm-pod
+    spec:
+      serviceAccount: nfs-client-provisioner 
+      containers:
+      - name: storm-nimbus
+        imagePullPolicy: IfNotPresent
+        image: storm:1.2.2
+        ports:
+        - containerPort: 6700
+          name: one
+        - containerPort: 6701
+          name: two  
+        - containerPort: 6702
+          name: three
+        - containerPort: 6703
+          name: four
+        - containerPort: 8888
+          name: five 
+        - containerPort: 6627
+          name: nine  
+        command:
+        - /bin/bash
+        - /apache-storm-1.2.2/bin/storm
+        - nimbus
+        - -c
+        - storm.zookeeper.servers=["zk-0.zk-svc.fabric8.svc.cluster.local","zk-1.zk-svc.fabric8.svc.cluster.local","zk-2.zk-svc.fabric8.svc.cluster.local"]
+        - -c
+        - nimbus.seeds=["storm-0.storm-svc.fabric8.svc.cluster.local","storm-1.storm-svc.fabric8.svc.cluster.local","storm-2.storm-svc.fabric8.svc.cluster.local"] 
+        volumeMounts:
+        - name: myappdata
+          mountPath: /apache-storm-1.2.2/storm-local/       
+      - name: storm-supervisor
+        imagePullPolicy: IfNotPresent
+        image: storm:1.2.2
+        ports:
+        - containerPort: 6700
+          name: one
+        - containerPort: 6701
+          name: two
+        - containerPort: 6702
+          name: three
+        - containerPort: 6703
+          name: four
+        - containerPort: 8888
+          name: five
+        - containerPort: 6627
+          name: nine
+        command:
+        - /bin/bash
+        - /apache-storm-1.2.2/bin/storm
+        - supervisor
+        - -c
+        - storm.zookeeper.servers=["zk-0.zk-svc.fabric8.svc.cluster.local","zk-1.zk-svc.fabric8.svc.cluster.local","zk-2.zk-svc.fabric8.svc.cluster.local"]
+        - -c
+        - nimbus.seeds=["storm-0.storm-svc.fabric8.svc.cluster.local","storm-1.storm-svc.fabric8.svc.cluster.local","storm-2.storm-svc.fabric8.svc.cluster.local"]
+        volumeMounts:
+        - name: myappdata
+          mountPath: /apache-storm-1.2.2/storm-local/
+   
+  volumeClaimTemplates:
+  - metadata:
+      name: myappdata
+      annotations:
+        #不同版本这里引用的alpha/beta不同注意
+                volume.beta.kubernetes.io/storage-class: "nfs"
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

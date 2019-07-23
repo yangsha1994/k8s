@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-myapp
+  namespace: default
+  annotations: #进行说明我们接下来要用到的规则是nginx,就是靠annotations来识别类型的，只有进行注解了才能转化为对应的与controller相匹配的规则
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules: #定义把谁转到谁那儿去
+  - host: tomcat.yangyang.com #要确保在外部通过互联网访问时能解析此主机名，并且解析结果刚好能到达我们Service nodePort映射的主机上去
+    http: #定义前后端路径
+      paths: #不给默认为/
+      - path: #前端路径，空表示默认的/ 
+        backend: #匹配后端service 
+          serviceName: tomcat
+          servicePort: 8080

@@ -1,0 +1,32 @@
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: web
+  namespace: fabric8
+spec:
+  serviceName: "nginx1"
+  replicas: 2
+  volumeClaimTemplates:
+  - metadata:
+      name: test
+      annotations:
+        volume.beta.kubernetes.io/storage-class: "nfs"
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+  template:
+    metadata:
+      labels:
+        app: nginx1
+    spec:
+      serviceAccount: nfs-client-provisioner
+      containers:
+      - name: nginx1
+        image: nginx
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - mountPath: "/persistentvolumes"
+          name: test
+
