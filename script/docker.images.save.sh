@@ -25,5 +25,5 @@ docker save -o $tarname'.tar'  ${images[$i]}:${tags[$i]}
 
 done 
 
-
-mv  *.tar  /k8s/git-k8s/images/
+mkdir ../images
+mv  *.tar  ../images
