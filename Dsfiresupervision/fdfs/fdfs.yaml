@@ -1,0 +1,117 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fdfs-svc
+  labels:
+    app: fdfs-svc
+spec:
+  ports:
+  - port: 22122
+    name: port1
+    targetPort: 22122
+  - port: 8888
+    name: port2
+    targetPort: 8888
+  
+ 
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: 
+  name: fdfs
+  namespace: fabric8
+spec:
+  serviceName: fdfs-svc #这是必须要的字段，需要关联到每一个无头服务上，他基于这个无头服务才能给每一个pod分配一个唯一的，持久的，固定的标识符
+  replicas: 2
+  selector: 
+    matchLabels:
+      app: fdfs-pod
+  template:
+    metadata:
+      labels:
+        app: fdfs-pod
+    spec:
+      serviceAccount: nfs-client-provisioner 
+      containers:
+      - name: fdfs
+        imagePullPolicy: IfNotPresent
+        image: fastdfs:5.11
+        ports:
+        - containerPort: 8888
+          name: one
+        - containerPort: 22122
+          name: two    
+                env:
+            - name : TRACKERSERVER
+          value: "fdfs-0 fdfs-1"
+        volumeMounts:
+        - name: fdfsdata
+          mountPath: /var/local/fdfs/     
+                  
+   
+  volumeClaimTemplates:
+  - metadata:
+      name: fdfsdata
+      annotations:
+          volume.beta.kubernetes.io/storage-class: "nfs"
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
