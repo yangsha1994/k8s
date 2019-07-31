@@ -1,0 +1,64 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tomcat 
+  namespace: default
+spec:
+  selector: 
+    app: dsfiresupervision
+    release: canary
+  ports:
+  - name: http
+    targetPort: 8080
+    port: 8080
+  - name: ajp
+    targetPort: 8009
+    port: 8009
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: dsfiresupervision-pv
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "nfs"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dsfiresupervision-tomcat
+  namespace: default
+spec:
+  replicas: 1 
+  selector: 
+    matchLabels:
+      app: dsfiresupervision 
+      release: canary
+  template:
+    metadata:
+      labels:
+        app: dsfiresupervision
+        release: canary
+    spec:
+      containers:
+      - name: myapp
+        image: tomcat:8.5.32-jre8-alpine
+        ports:
+        - name: http
+          containerPort: 8080
+        - name: ajp
+          containerPort: 8009
+        volumeMounts:
+        - name: dsfiresupervision-nfs-pvc 
+          mountPath: /usr/local/tomcat/webapps/Dsfiresupervision
+      volumes:
+         - name: dsfiresupervision-nfs-pvc
+           persistentVolumeClaim:
+             claimName:  dsfiresupervision-pv
+

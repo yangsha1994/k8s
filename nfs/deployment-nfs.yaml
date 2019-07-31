@@ -23,11 +23,11 @@ spec:
             - name: PROVISIONER_NAME
               value: example.com/nfs #这里名字自定义，要记住storageclass 后面要用到
             - name: NFS_SERVER
-              value: 192.168.0.226
+              value: 192.168.0.227
             - name: NFS_PATH
               value: /xfdata 
       volumes:
         - name: nfs-client-root
           nfs:
-            server: 192.168.0.226
+            server: 192.168.0.227
             path: /xfdata

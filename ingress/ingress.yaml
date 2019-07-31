@@ -12,5 +12,5 @@ spec:
       paths: #不给默认为/
       - path: #前端路径，空表示默认的/ 
         backend: #匹配后端service 
-          serviceName: tomcat
+          serviceName: tomcat  
           servicePort: 8080
